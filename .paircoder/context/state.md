@@ -27,7 +27,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 | T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | ✓ done | T1.1 |
 | T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | ✓ done | T1.4 |
 | T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | ✓ done | T1.2, T1.3, T1.4, T1.5 |
-| T1.8 | ROADMAP, CHANGELOG, versioning docs | 15 | P1 | 3 | pending | T1.7 |
+| T1.8 | ROADMAP, CHANGELOG, versioning docs | 15 | P1 | 3 | ✓ done | T1.7 |
 
 > Cx totals above use the `plan add-task` 0–100 complexity scale (Cx points × ~8 per unit from the backlog's 32-Cx sprint budget). Backlog Cx columns: T1.1=2, T1.2=6, T1.3=4, T1.4=4, T1.5=5, T1.6=6, T1.7=3, T1.8=2.
 
@@ -53,13 +53,16 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T1.7 done** (auto-updated by hook)
+### Session: 2026-04-17 — Sprint-1 review + fix + ship (reviewing-and-fixing)
 
-- **T1.7 done** (drift helpers + top-level exports)
-
-- **T1.6 done** (auto-updated by hook)
-
-- **T1.6 done** (bundles/manifest.py + generated manifest.schema.json)
+- **Engage misreport:** T1.8 flagged "already satisfied -- skipping" but was actually `pending` with no output. Caught during doc-cleanup inventory, folded into the review-fix pipeline.
+- **Code review** (nayru on full `main...HEAD` + CI workflow): 0 Must Fix, 7 Should Fix, 10 Consider. Plus a second pass (parallel reuse/quality/efficiency agents) surfaced the `_Unit` alias miss in `SignalPacket.quality`, the missing session-helper exports, and a 220ms redundant subprocess test.
+- **Applied fixes:** extracted `SessionId = Annotated[str, AfterValidator(...)]` in `session.py` (replaces 3× duplicate regex check across SessionStart/StateVector/SessionManifest); shared `Unit` alias from `signals.py` for every `[0,1]` field; bounded `StateVector.breath_quality` / `hrv_quality`; added `min_length=1` on `SignalPacket.sensor_id`/`stream` + `ge=0` on `t_ns`; added `ge=0` to `StateVector.t_ns` and `Annotation.t_ns`; **0.x semver sharpening** in `check_contract_version` — hard-fail on minor mismatch while major==0 (matches `>=0.1,<0.2` pin semantics and semver.org §4); expanded `__init__.py` exports to include `SessionId`, `SESSION_ID_REGEX`, session helpers, `read_ddl`; deleted the redundant subprocess-spawning schema-drift test (in-process `model_json_schema()` comparison covers the same invariant — suite is now 60% faster, 0.49s).
+- **T1.8 completed:** wrote `ROADMAP.md` (v0.1.0 / v0.1.x / v0.2.0 / v0.3.0 / v1.0.0 milestones), `CHANGELOG.md` (Keep-a-Changelog seeded at 0.1.0), README Versioning section (semver policy, downstream pin `halcytone-contracts>=0.1,<0.2`, `check_contract_version` runtime pattern, schema-drift detector note). Reconciled the "Open design questions" placeholder.
+- **CI landed:** `.github/workflows/ci.yml` with ruff, pytest matrix (3.11/3.12/3.13), and schema-drift jobs. Python 3.13 added to pyproject classifiers.
+- **Security audit decoded:** engage's "PR blocked by security audit" was `scan-deps` flagging 16 HIGH CVEs in the shared venv — 15 are env packages this repo never declares (aiohttp, cryptography, pillow, pygments, python-multipart); the one overlap (`pytest 9.0.2 → 9.0.3`) is already satisfied by our `>=7.4` pin. `scan-secrets` clean.
+- **Shipped:** commit `853e5b6`, branch `engage/backlog-sprint-1` pushed, PR [#1](https://github.com/fivedollarfridays/halcytone-contracts/pull/1) open. CI: 5/5 jobs green in ~17s.
+- Verified locally: **272 pytest passing**, `ruff check .` clean, schema drift clean, secret scan clean.
 
 ### Session: 2026-04-17 — T1.7 Drift helpers + top-level exports (Driver)
 
@@ -134,10 +137,10 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What's Next
 
-1. Wave 0 (T1.1) complete — scaffold landed and verified.
-2. Wave 1 complete: T1.2 ✓, T1.3 ✓, T1.4 ✓, T1.5 ✓.
-3. Wave 2 complete: T1.6 ✓, T1.7 ✓. Public surface is fully wired; `__contract_version__`, `REQUIRED_SCHEMA_VERSION`, and the drift helpers (`validate_stream_roster`, `check_contract_version`, `ContractError`) are exported at the top level.
-4. Wave 3 (T1.8) ready to start — ROADMAP / CHANGELOG / versioning docs, now able to reference the concrete `check_contract_version` API.
+1. Sprint 1 shipped — PR [#1](https://github.com/fivedollarfridays/halcytone-contracts/pull/1) open with CI green (5/5 jobs: lint, test 3.11/3.12/3.13, schema-drift).
+2. **Waiting on:** PR review + merge to `main`. After merge, tag `v0.1.0` per the versioning policy documented in the README.
+3. **Next sprint (v0.2.0):** paircoder template scaffold for sibling `halcytone-*` repos + expanded `SessionManifest` (typed `baselines`, versioned `summary`). See `ROADMAP.md`.
+4. **Known non-blockers carried over** from the simplify review: consider `frozen=True` on `SignalPacket` / `StateVector` (debated — defer until a downstream needs mutation); test-fixture DRY (session_id literal + sample-kwargs builders to `conftest.py`) once a second sprint's worth of tests exists to justify.
 
 ## Blockers
 
