@@ -96,18 +96,41 @@ class TestCheckContractVersion:
             assert check_contract_version(bumped_patch) is None
 
     def test_minor_mismatch_emits_user_warning(self) -> None:
+        """On ≥1.0, minor-mismatch warns. On 0.x, minor-mismatch hard-fails."""
         major, minor, patch = __contract_version__.split(".")
         bumped_minor = f"{major}.{int(minor) + 1}.{patch}"
-        with pytest.warns(UserWarning):
-            check_contract_version(bumped_minor)
+        if int(major) == 0:
+            with pytest.raises(ContractError):
+                check_contract_version(bumped_minor)
+        else:
+            with pytest.warns(UserWarning):
+                check_contract_version(bumped_minor)
 
     def test_minor_mismatch_downgrade_also_warns(self) -> None:
+        """On ≥1.0, minor-downgrade warns. On 0.x, it hard-fails."""
         major, minor, patch = __contract_version__.split(".")
         if int(minor) == 0:
             pytest.skip("cannot downgrade minor below 0")
         lower_minor = f"{major}.{int(minor) - 1}.{patch}"
-        with pytest.warns(UserWarning):
-            check_contract_version(lower_minor)
+        if int(major) == 0:
+            with pytest.raises(ContractError):
+                check_contract_version(lower_minor)
+        else:
+            with pytest.warns(UserWarning):
+                check_contract_version(lower_minor)
+
+    def test_minor_mismatch_on_zerox_hard_fails(self) -> None:
+        """Explicit coverage: pre-1.0 minor mismatch is a contract break."""
+        from halcytone_contracts.drift import _parse_semver
+
+        major, _, _ = _parse_semver(__contract_version__)
+        if major != 0:
+            pytest.skip("only applies while package is in 0.x")
+        _, minor, patch = __contract_version__.split(".")
+        bumped = f"0.{int(minor) + 1}.{patch}"
+        with pytest.raises(ContractError) as exc_info:
+            check_contract_version(bumped)
+        assert "pre-1.0" in str(exc_info.value)
 
     def test_major_mismatch_raises(self) -> None:
         major, minor, patch = __contract_version__.split(".")

@@ -18,14 +18,23 @@ from halcytone_contracts.drift import (
     validate_stream_roster,
 )
 from halcytone_contracts.session import (
+    SESSION_ID_REGEX,
     Annotation,
     MapperConfigUpdate,
+    SessionId,
     SessionStart,
     SessionStop,
+    format_session_id,
+    new_session_id,
+    parse_session_id,
 )
 from halcytone_contracts.signals import RESERVED_STREAMS, SignalPacket, StreamSpec
 from halcytone_contracts.state import StateVector
-from halcytone_contracts.storage import REQUIRED_SCHEMA_VERSION, SCHEMA_VERSION
+from halcytone_contracts.storage import (
+    REQUIRED_SCHEMA_VERSION,
+    SCHEMA_VERSION,
+    read_ddl,
+)
 
 __contract_version__: str = "0.1.0"
 __version__: str = __contract_version__
@@ -37,6 +46,8 @@ __all__ = [
     "REQUIRED_SCHEMA_VERSION",
     "RESERVED_STREAMS",
     "SCHEMA_VERSION",
+    "SESSION_ID_REGEX",
+    "SessionId",
     "SessionManifest",
     "SessionStart",
     "SessionStop",
@@ -46,5 +57,9 @@ __all__ = [
     "__contract_version__",
     "__version__",
     "check_contract_version",
+    "format_session_id",
+    "new_session_id",
+    "parse_session_id",
+    "read_ddl",
     "validate_stream_roster",
 ]

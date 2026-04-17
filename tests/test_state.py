@@ -117,6 +117,24 @@ def test_state_vector_rejects_unknown_field() -> None:
         StateVector(**kwargs)
 
 
+@pytest.mark.parametrize(
+    "bad_id",
+    [
+        "",
+        "not-a-session-id",
+        "20260417-143022",
+        "20260417-143022-toolongslug",
+        "20260417-143022-A7M2",  # uppercase — alphabet is [0-9a-z]
+    ],
+)
+def test_state_vector_rejects_invalid_session_id(bad_id: str) -> None:
+    """session_id must match the canonical regex, same as SessionStart/SessionManifest."""
+    kwargs = _sample_state_kwargs()
+    kwargs["session_id"] = bad_id
+    with pytest.raises(ValidationError):
+        StateVector(**kwargs)
+
+
 # ---------------------------------------------------------------------------
 # Range-validated fields (AC: explicit [0, 1] normalization)
 # ---------------------------------------------------------------------------
@@ -125,6 +143,8 @@ def test_state_vector_rejects_unknown_field() -> None:
 BOUNDED_ZERO_ONE_FIELDS = [
     "breath_phase",
     "breath_depth",
+    "breath_quality",
+    "hrv_quality",
     "eeg_alpha",
     "eeg_theta",
     "eeg_beta",

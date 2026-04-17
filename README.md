@@ -188,6 +188,54 @@ artifacts: {video: video.mp4, ...}
 - Real-time audio latency SLAs. Best effort, <100ms target, not contractual.
 - Hot reload. Start a new session to change config.
 
+## Versioning
+
+This package follows [Semantic Versioning](https://semver.org/) with one deliberate sharpening while the package is in 0.x:
+
+| Bump kind | Meaning |
+|-----------|---------|
+| **major** (`1.0 → 2.0`) | Breaking contract change: a field/model/export is removed, a type changes incompatibly, or a validator tightens in a way existing producers fail. |
+| **minor** (`0.1 → 0.2` or `1.0 → 1.1`) | Additive: new streams in `RESERVED_STREAMS`, new optional fields, new helpers. On ≥1.0 this is backward-compatible; on 0.x per semver §4 it is allowed to be breaking, so consumers must re-pin. |
+| **patch** (`0.1.0 → 0.1.1`) | Fixes, docstring updates, test-only changes. No contract change. |
+
+### Downstream pin recommendation
+
+While the package is in 0.x, pin by minor band:
+
+```toml
+# pyproject.toml in a consumer repo
+dependencies = [
+    "halcytone-contracts>=0.1,<0.2",
+]
+```
+
+Bump the upper bound deliberately when migrating to a new minor — don't let a transitive upgrade surprise you mid-session.
+
+### Runtime contract check
+
+Every consumer should call `check_contract_version` once at startup so a mispin crashes loud instead of failing later in a sensor-specific way:
+
+```python
+from halcytone_contracts import check_contract_version
+
+check_contract_version("0.1.0")  # the version this consumer was developed against
+```
+
+Policy (see `halcytone_contracts/drift.py` for the table):
+
+- exact or patch match → no-op
+- minor mismatch on ≥1.0 → `UserWarning` via `warnings.warn`
+- minor mismatch on 0.x → `ContractError` (strict pre-1.0 per semver §4, matches the pin band)
+- major mismatch → `ContractError`
+
+### Schema drift check
+
+The JSON Schema mirror of `SessionManifest` at `halcytone_contracts/bundles/manifest.schema.json` is checked into the repo. CI regenerates it via `scripts/regen_manifest_schema.py` and fails on any diff, so the TypeScript side (AgentGrounds) can trust the file as the canonical cross-language contract.
+
+### Roadmap
+
+See [`ROADMAP.md`](ROADMAP.md) for milestone scope and [`CHANGELOG.md`](CHANGELOG.md) for released versions.
+
 ## Open design questions
 
-None open at spec time. This section gets repopulated as implementation surfaces new decisions.
+As implementation surfaces new decisions, they land here with owner + target version. Forward-looking scope lives in [`ROADMAP.md`](ROADMAP.md).

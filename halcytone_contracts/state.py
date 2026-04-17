@@ -14,17 +14,18 @@ single-line JSON string suitable for JSONL; `model_validate_json()`
 parses it back losslessly.
 
 Range-bounded fields (phase, depth, coherence, presence, normalized EEG
-band powers, EEG quality) are validated in `[0, 1]` so downstream code
-can trust bounds without re-checking.
+band powers, and every `*_quality` score) are validated in `[0, 1]` so
+downstream code can trust bounds without re-checking. Quality scores are
+uniform across modalities by design — a consumer comparing
+`breath_quality` to `eeg_quality` is asking a meaningful question.
 """
 
 from __future__ import annotations
 
-from typing import Annotated
-
 from pydantic import BaseModel, ConfigDict, Field
 
-_Unit = Annotated[float, Field(ge=0.0, le=1.0)]
+from halcytone_contracts.session import SessionId
+from halcytone_contracts.signals import Unit as _Unit
 
 
 class StateVector(BaseModel):
@@ -32,19 +33,19 @@ class StateVector(BaseModel):
 
     model_config = ConfigDict(frozen=False, extra="forbid")
 
-    t_ns: int
-    session_id: str
+    t_ns: int = Field(ge=0)
+    session_id: SessionId
 
     # breath
     breath_phase: _Unit
     breath_rate: float
     breath_depth: _Unit
-    breath_quality: float
+    breath_quality: _Unit
 
     # cardiovascular
     heart_rate: float
     hrv_rmssd: float
-    hrv_quality: float
+    hrv_quality: _Unit
 
     # autonomic
     eda_level: float

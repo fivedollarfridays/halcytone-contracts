@@ -53,6 +53,8 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+- **T1.7 done** (auto-updated by hook)
+
 - **T1.7 done** (drift helpers + top-level exports)
 
 - **T1.6 done** (auto-updated by hook)

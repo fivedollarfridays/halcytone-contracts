@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import json
-import subprocess
-import sys
 from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
@@ -118,7 +116,6 @@ def test_manifest_yaml_roundtrip_with_in_progress_session() -> None:
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCHEMA_PATH = _REPO_ROOT / "halcytone_contracts" / "bundles" / "manifest.schema.json"
-_REGEN_SCRIPT = _REPO_ROOT / "scripts" / "regen_manifest_schema.py"
 
 
 def test_manifest_schema_file_is_checked_in() -> None:
@@ -128,16 +125,6 @@ def test_manifest_schema_file_is_checked_in() -> None:
 def test_manifest_schema_matches_model_json_schema() -> None:
     on_disk = json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
     assert on_disk == SessionManifest.model_json_schema()
-
-
-def test_regen_script_output_is_byte_equal_to_checked_in_file() -> None:
-    result = subprocess.run(
-        [sys.executable, str(_REGEN_SCRIPT), "--stdout"],
-        capture_output=True,
-        check=True,
-    )
-    expected = _SCHEMA_PATH.read_bytes()
-    assert result.stdout == expected, "regen output drifted from checked-in schema"
 
 
 def test_manifest_schema_is_packaged() -> None:

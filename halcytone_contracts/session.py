@@ -25,9 +25,9 @@ import re
 import string
 import threading
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 _SLUG_ALPHABET = string.digits + string.ascii_lowercase  # base36
 _SLUG_LENGTH = 4
@@ -38,6 +38,17 @@ SESSION_ID_REGEX: re.Pattern[str] = re.compile(
     rf"^\d{{8}}-\d{{6}}-[{re.escape(_SLUG_ALPHABET)}]{{{_SLUG_LENGTH}}}$"
 )
 _SLUG_REGEX = re.compile(rf"^[{re.escape(_SLUG_ALPHABET)}]{{{_SLUG_LENGTH}}}$")
+
+
+def _check_session_id(v: str) -> str:
+    if not SESSION_ID_REGEX.fullmatch(v):
+        raise ValueError(f"invalid session_id {v!r}")
+    return v
+
+
+SessionId = Annotated[str, AfterValidator(_check_session_id)]
+"""Pydantic-validated session-id string — the single source of truth for the
+canonical format. Reused by `SessionStart`, `StateVector`, and `SessionManifest`."""
 
 
 def _to_base36(n: int, width: int) -> str:
@@ -89,15 +100,8 @@ class SessionStart(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    session_id: str
+    session_id: SessionId
     config: dict[str, Any]
-
-    @field_validator("session_id")
-    @classmethod
-    def _validate_session_id(cls, v: str) -> str:
-        if not SESSION_ID_REGEX.fullmatch(v):
-            raise ValueError(f"invalid session_id {v!r}")
-        return v
 
 
 class SessionStop(BaseModel):
@@ -111,7 +115,7 @@ class Annotation(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    t_ns: int
+    t_ns: int = Field(ge=0)
     label: str
     data: dict[str, Any]
 
@@ -128,6 +132,7 @@ __all__ = [
     "SESSION_ID_REGEX",
     "Annotation",
     "MapperConfigUpdate",
+    "SessionId",
     "SessionStart",
     "SessionStop",
     "format_session_id",

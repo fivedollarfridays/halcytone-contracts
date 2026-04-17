@@ -15,9 +15,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 
-from halcytone_contracts.session import SESSION_ID_REGEX
+from halcytone_contracts.session import SessionId
 
 
 class SessionManifest(BaseModel):
@@ -25,7 +25,7 @@ class SessionManifest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    session_id: str
+    session_id: SessionId
     started_at: datetime
     ended_at: datetime | None = None
     duration_s: int
@@ -33,13 +33,6 @@ class SessionManifest(BaseModel):
     baselines: dict[str, float]
     summary: dict[str, float]
     artifacts: dict[str, str]
-
-    @field_validator("session_id")
-    @classmethod
-    def _validate_session_id(cls, v: str) -> str:
-        if not SESSION_ID_REGEX.fullmatch(v):
-            raise ValueError(f"invalid session_id {v!r}")
-        return v
 
 
 __all__ = ["SessionManifest"]

@@ -77,6 +77,35 @@ def test_signal_packet_rejects_missing_fields() -> None:
         SignalPacket(sensor_id="x", stream="y", t_ns=1, values=[0.0])  # type: ignore[call-arg]
 
 
+def test_signal_packet_rejects_empty_sensor_id() -> None:
+    kwargs = _sample_packet_kwargs()
+    kwargs["sensor_id"] = ""
+    with pytest.raises(ValidationError):
+        SignalPacket(**kwargs)
+
+
+def test_signal_packet_rejects_empty_stream() -> None:
+    kwargs = _sample_packet_kwargs()
+    kwargs["stream"] = ""
+    with pytest.raises(ValidationError):
+        SignalPacket(**kwargs)
+
+
+@pytest.mark.parametrize("bad_t_ns", [-1, -1_700_000_000_000_000_000])
+def test_signal_packet_rejects_negative_t_ns(bad_t_ns: int) -> None:
+    kwargs = _sample_packet_kwargs()
+    kwargs["t_ns"] = bad_t_ns
+    with pytest.raises(ValidationError):
+        SignalPacket(**kwargs)
+
+
+def test_signal_packet_accepts_zero_t_ns() -> None:
+    kwargs = _sample_packet_kwargs()
+    kwargs["t_ns"] = 0
+    packet = SignalPacket(**kwargs)
+    assert packet.t_ns == 0
+
+
 # ---------------------------------------------------------------------------
 # StreamSpec
 # ---------------------------------------------------------------------------

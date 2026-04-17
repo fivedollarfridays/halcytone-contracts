@@ -13,16 +13,19 @@ Two helpers + one exception class:
 * `check_contract_version(consumer_version)` — enforces the fleet's semver
   policy against `__contract_version__`:
 
-    | Delta          | Action                        |
-    |----------------|-------------------------------|
-    | exact or patch | no-op                         |
-    | minor          | `warnings.warn(UserWarning)`  |
-    | major          | raise `ContractError`         |
-    | malformed      | raise `ContractError`         |
+    | Delta                              | Action                        |
+    |------------------------------------|-------------------------------|
+    | exact or patch                     | no-op                         |
+    | minor, major ≥ 1                   | `warnings.warn(UserWarning)`  |
+    | minor, major == 0 (pre-1.0)        | raise `ContractError`         |
+    | major                              | raise `ContractError`         |
+    | malformed                          | raise `ContractError`         |
 
-  Patch-only changes are strictly backward compatible, so we don't even warn;
-  minor additions are additive-only by policy and warn so operators can opt
-  into a re-pin; major bumps are breaking and must be an outright failure.
+  Patch-only changes are strictly backward compatible, so we don't even warn.
+  On ≥ 1.0, minor additions are additive-only by policy and warn so operators
+  can opt into a re-pin. On 0.x, semver §4 says any minor bump may be
+  breaking — this matches the downstream pin pattern `>=0.1,<0.2`, so a
+  0.1 consumer encountering a 0.2 publisher is a hard failure.
 """
 
 from __future__ import annotations
@@ -89,6 +92,11 @@ def check_contract_version(consumer_version: str) -> None:
             f"package is {__contract_version__}"
         )
     if c_minor != p_minor:
+        if p_major == 0:
+            raise ContractError(
+                f"contract minor-version mismatch on pre-1.0 package: consumer pinned "
+                f"{consumer_version}, package is {__contract_version__}"
+            )
         warnings.warn(
             f"contract minor-version mismatch: consumer pinned {consumer_version}, "
             f"package is {__contract_version__}",

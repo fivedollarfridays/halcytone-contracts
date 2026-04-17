@@ -9,8 +9,13 @@ on for v1 (see README §"Stream naming convention").
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
+
+Unit = Annotated[float, Field(ge=0.0, le=1.0)]
+"""A float in ``[0, 1]``. Single source of truth for every normalized /
+quality-score field across the package (reused by `state.StateVector`)."""
 
 
 class SignalPacket(BaseModel):
@@ -18,11 +23,11 @@ class SignalPacket(BaseModel):
 
     model_config = ConfigDict(frozen=False, extra="forbid")
 
-    sensor_id: str
-    stream: str
-    t_ns: int
+    sensor_id: str = Field(min_length=1)
+    stream: str = Field(min_length=1)
+    t_ns: int = Field(ge=0)
     values: list[float]
-    quality: float = Field(ge=0.0, le=1.0)
+    quality: Unit
 
 
 @dataclass(frozen=True, slots=True)
