@@ -21,7 +21,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 | Task | Title | Cx | Pri | Wave | Status | Depends |
 |------|-------|----|-----|------|--------|---------|
 | T1.1 | Package scaffold + pyproject | 15 | P0 | 0 | ✓ done | — |
-| T1.2 | signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) | 50 | P0 | 1 | pending | T1.1 |
+| T1.2 | signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) | 50 | P0 | 1 | ✓ done | T1.1 |
 | T1.3 | state.py (StateVector) | 35 | P0 | 1 | pending | T1.1 |
 | T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | pending | T1.1 |
 | T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | pending | T1.1 |
@@ -53,6 +53,15 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+### Session: 2026-04-17 — T1.2 signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) (Driver)
+
+- TDD: wrote `tests/test_signals.py` (47 tests total across suite) covering field set, quality bounds, JSON round-trip, frozen-dataclass invariants, registry coverage/duplicates/rates/channels, derived flags per-stream, archive_only for `breath.acoustic` only, IMU 3-channel shape, domain coverage.
+- Added `halcytone_contracts/signals.py`:
+  - `SignalPacket` pydantic v2 model (`sensor_id`, `stream`, `t_ns`, `values`, `quality`) with `quality: Field(ge=0.0, le=1.0)` and `extra="forbid"`.
+  - `StreamSpec` frozen slotted dataclass (`name`, `domain`, `sample_rate_hz`, `channel_count`, `dtype`, `derived`, `archive_only`).
+  - `RESERVED_STREAMS` dict covering all 21 reserved names (eeg.ch1–ch4, 5 EEG band powers, ppg, hrv.rmssd/sdnn, eda, skin_temp, imu.accel/gyro, breath acoustic/envelope/rate/phase/depth). Rates/channels chosen from README + hardware specs (Ganglion 200 Hz, EmotiBit 25 Hz PPG, Stemoscope 48 kHz acoustic archive-only, 100 Hz envelope).
+- Verified: `pytest` 47 passed, `ruff check` clean, `bpsai-pair arch check halcytone_contracts/signals.py` clean.
+
 ### Session: 2026-04-17 — T1.1 Package scaffold + pyproject (Driver)
 
 - Created `pyproject.toml` (setuptools backend, Python ≥3.11, pydantic v2 + pyyaml runtime, pytest + ruff dev extras).
@@ -74,7 +83,7 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 ## What's Next
 
 1. Wave 0 (T1.1) complete — scaffold landed and verified.
-2. Wave 1 (T1.2, T1.3, T1.4, T1.5) can run fully in parallel — no file overlap.
+2. Wave 1: T1.2 ✓ done. T1.3, T1.4, T1.5 remain — can still run in parallel, no file overlap.
 4. Wave 2 (T1.6, T1.7) gates on Wave 1 outputs; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2.
 5. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
 
