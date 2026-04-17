@@ -1,0 +1,13 @@
+id: plan-2026-04-sprint-1-v0-1-0-mvp
+title: Sprint 1 — halcytone-contracts v0.1.0 MVP
+type: feature
+status: planned
+created_at: '2026-04-17T11:24:19.152700'
+skills:
+- designing-and-implementing
+goals:
+- 'Ship pip-installable halcytone_contracts v0.1.0: pydantic v2 schemas, SQL DDL,
+  manifest, drift guardrails, semver docs'
+- Lock the cross-repo contract surface for the 7-repo halcytone fleet
+metadata:
+  pm_scope: story

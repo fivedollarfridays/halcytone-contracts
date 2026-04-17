@@ -1,67 +1,119 @@
 # Current State
 
-> Last updated: <!-- Update after each session -->
+> Last updated: 2026-04-17
 
 ## Active Plan
 
-**Plan:** None yet
-**Status:** Ready to start
-**Current Sprint:** N/A
+**Plan:** `plan-2026-04-sprint-1-v0-1-0-mvp` — Sprint 1 — halcytone-contracts v0.1.0 MVP
+**Status:** Planned (Navigator handoff complete; ready for Driver)
+**Current Sprint:** sprint-1
+**Total Cx:** 32 across 8 tasks (P0 ×4 · P1 ×4)
+**Source backlog:** `plans/backlogs/backlog-sprint-1.md`
 
 ## Current Focus
 
-Project initialized with PairCoder v2. Ready to create first plan.
+Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing every schema, type, and protocol spec the seven-repo halcytone fleet depends on. Pydantic v2 for authorship, JSON Schema exported for cross-language boundary, raw SQL DDL, reserved-stream registry, drift guardrails, and a documented semver policy. **Scope boundary:** contracts only — no fusion logic, no I/O, no LSL wrappers, no CLI.
 
 ## Task Status
 
-### Active Sprint
+### Active Sprint — sprint-1
 
-No tasks yet. Create a plan to get started:
+| Task | Title | Cx | Pri | Wave | Status | Depends |
+|------|-------|----|-----|------|--------|---------|
+| T1.1 | Package scaffold + pyproject | 15 | P0 | 0 | ✓ done | — |
+| T1.2 | signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) | 50 | P0 | 1 | pending | T1.1 |
+| T1.3 | state.py (StateVector) | 35 | P0 | 1 | pending | T1.1 |
+| T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | pending | T1.1 |
+| T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | pending | T1.1 |
+| T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | pending | T1.4 |
+| T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | pending | T1.2, T1.3, T1.4, T1.5 |
+| T1.8 | ROADMAP, CHANGELOG, versioning docs | 15 | P1 | 3 | pending | T1.7 |
 
-```bash
-bpsai-pair plan new my-first-feature --type feature --title "My First Feature"
+> Cx totals above use the `plan add-task` 0–100 complexity scale (Cx points × ~8 per unit from the backlog's 32-Cx sprint budget). Backlog Cx columns: T1.1=2, T1.2=6, T1.3=4, T1.4=4, T1.5=5, T1.6=6, T1.7=3, T1.8=2.
+
+### Dependency Graph
+
 ```
+Wave 0:  T1.1
+           ↓
+Wave 1:  T1.2   T1.3   T1.4   T1.5      (parallel — no file overlap)
+                        ↓       ↓
+Wave 2:                T1.6    T1.7 (← T1.2, T1.3, T1.4, T1.5)
+                                ↓
+Wave 3:                        T1.8
+```
+
+### Cut Order if Budget Overflows
+
+`T1.8 → T1.6 → T1.7 → T1.4`. Cutting any P0 (T1.1, T1.2, T1.3, T1.5) fails the sprint.
 
 ### Backlog
 
-Tasks deprioritized for later work will appear here.
+No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-### Session: <!-- Date --> - Project Initialization
+### Session: 2026-04-17 — T1.1 Package scaffold + pyproject (Driver)
 
-- Initialized project with PairCoder v2
-- Created `.paircoder/` directory structure
-- Set up initial configuration
+- Created `pyproject.toml` (setuptools backend, Python ≥3.11, pydantic v2 + pyyaml runtime, pytest + ruff dev extras).
+- Added `halcytone_contracts/__init__.py` with `__version__ = "0.1.0"` only (exports deferred to T1.7).
+- Added `tests/__init__.py`, `tests/conftest.py`, and `tests/test_package.py` (semver-shape smoke test; passes).
+- Configured `[tool.ruff]` in `pyproject.toml` (line-length 100, py311 target, rules E/F/I/UP/B, excludes `.claude`, `.paircoder`, `.venv`, `build`, `dist`, `scripts`).
+- Updated `.gitignore` for Python artifacts (`*.egg-info/`, `.pytest_cache/`, `dist/`, `build/`).
+- Verified: clean venv `pip install -e .[dev]` succeeds, `pytest` green (1 passed), `ruff check .` clean, `bpsai-pair arch check` clean.
 
-<!-- Add new session entries here as you complete work -->
+### Session: 2026-04-17 — Navigator handoff (sprint-1 planning)
+
+- Loaded backlog `plans/backlogs/backlog-sprint-1.md` via `/pc-plan`.
+- Pre-flight: budget healthy (info-only thresholds, no current usage warning); Trello disabled (`trello.enabled: false`).
+- Created plan `plan-2026-04-sprint-1-v0-1-0-mvp` (type: `feature`, skill: `designing-and-implementing`, total Cx 32, auto-scope: story).
+- Added 8 tasks (T1.1 – T1.8) via `bpsai-pair plan add-task` with per-task type/priority/complexity/sprint metadata.
+- Wrote full task file bodies for each: Objective, Implementation Plan (TDD-first), Acceptance Criteria (verbatim from backlog), Verification commands, Dependencies.
+- Captured wave structure + cut order for engage-time dispatch.
 
 ## What's Next
 
-1. Define your first feature or improvement
-2. Create a plan: `bpsai-pair plan new <slug>`
-3. Add tasks to the plan
-4. Start implementing!
+1. Wave 0 (T1.1) complete — scaffold landed and verified.
+2. Wave 1 (T1.2, T1.3, T1.4, T1.5) can run fully in parallel — no file overlap.
+4. Wave 2 (T1.6, T1.7) gates on Wave 1 outputs; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2.
+5. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
 
 ## Blockers
 
-None currently.
+None.
+
+## Integration Points (locked at planning time)
+
+- **T1.2 → T1.7:** `RESERVED_STREAMS` feeds `validate_stream_roster`.
+- **T1.4 → T1.6:** session-id regex is the single source; manifest validates `session_id` against it.
+- **T1.5 → T1.7:** `SCHEMA_VERSION` re-exported as `REQUIRED_SCHEMA_VERSION`.
+- **T1.6 → future CI:** `manifest.schema.json` regen diff check.
+- **All wave-1 modules → T1.7:** top-level `__init__.py` re-exports.
+
+## Out of Scope (documented in backlog)
+
+- LSL wire-protocol wrappers, pylsl integration (lives in halcytone-sensors / halcytone-core)
+- SQLAlchemy / ORM layer — each repo wraps raw DDL
+- halcytone-publish ffmpeg composition logic
+- Sibling-repo paircoder template (deferred to v0.2.0)
+- Runtime asyncio bus for session control — models only; bus lives in halcytone-core
+- PyPI publishing — v0.1.0 ships as a git dep
+- Baseline format specification beyond `manifest.baselines: dict` — detailed schema is v0.3.0
 
 ## Quick Commands
 
 ```bash
-# Check status
+# Plan inspection
+bpsai-pair plan show plan-2026-04-sprint-1-v0-1-0-mvp
+bpsai-pair task list --plan plan-2026-04-sprint-1-v0-1-0-mvp
+
+# Start work
+bpsai-pair task update T1.1 --status in_progress
+
+# Complete (non-Trello)
+bpsai-pair task update T1.1 --status done
+
+# Status / budget
 bpsai-pair status
-
-# Create a new plan
-bpsai-pair plan new my-feature --type feature
-
-# List tasks
-bpsai-pair task list
-
-# Start working on a task
-bpsai-pair task update TASK-XXX --status in_progress
-
-# Complete a task (with Trello)
-bpsai-pair ttask done TRELLO-XX --summary "..." --list "Deployed/Done"
-bpsai-pair task update TASK-XXX --status done
+bpsai-pair budget status
+```
