@@ -1,0 +1,193 @@
+# halcytone-contracts
+
+Shared types, schemas, and protocol specs for the Halcytone biofeedback platform. Single source of truth for how every `halcytone-*` repo talks to its neighbors. Nothing else gets built until what is in here is settled.
+
+## Why this exists
+
+Halcytone is a personal biofeedback sonification platform. Multiple sensors publish live signal streams, a core fusion engine aligns and combines them, and downstream modules turn the combined state into audio, visuals, and recorded sessions. All those modules live in separate repos. This one defines the shared language.
+
+## System shape
+
+```
+Ganglion (EEG)      EmotiBit (PPG/EDA/temp/IMU)      Stemoscope (breath)
+     |                     |                                |
+     | native LSL          | OSC to LSL bridge              | audio to LSL bridge
+     v                     v                                v
+  -------------- LSL streams on localhost ---------------
+                              |
+                              v
+                       halcytone-core
+                    (fusion + session lifecycle)
+                              |
+          +-------------------+-------------------+
+          v                   v                   v
+   halcytone-audio      halcytone-hud      disk log (SQLite + XDF)
+   (soundscape)         (PyQt live)        (session archive)
+
+end of session:
+  halcytone-publish composes video + audio + HUD overlay into
+  ~/halcytone/sessions/{id}/ as a bundle
+```
+
+## The signal contract: SignalPacket
+
+Every sensor adapter publishes one or more LSL streams. Each sample is equivalent to this logical record:
+
+```python
+@dataclass
+class SignalPacket:
+    sensor_id: str       # "ganglion-01", "emotibit-01", "stemoscope-01"
+    stream: str          # "eeg.ch1", "ppg", "breath.envelope", ...
+    t_ns: int            # nanoseconds since Unix epoch, LSL clock-synced
+    values: list[float]  # per-sample vector
+    quality: float       # 0.0 to 1.0, adapter's self-reported quality
+```
+
+LSL carries timestamps, stream names, and channel counts on the wire. SignalPacket is the python-level view. Quality is published as a separate LSL stream named `{sensor_id}.quality` so it does not pollute the signal stream.
+
+### Stream naming convention
+
+`{domain}.{channel}` where domain is the modality (eeg, ppg, resp, eda, imu, breath) and channel is a descriptor.
+
+Reserved stream names for v1:
+
+- `eeg.ch1` through `eeg.ch4` (Ganglion raw)
+- `eeg.alpha`, `eeg.theta`, `eeg.beta`, `eeg.delta`, `eeg.gamma` (band power, computed in sensor adapter)
+- `ppg` (EmotiBit raw)
+- `hrv.rmssd`, `hrv.sdnn` (derived, 30s rolling window)
+- `eda` (EmotiBit skin conductance)
+- `skin_temp` (EmotiBit)
+- `imu.accel`, `imu.gyro` (EmotiBit motion)
+- `breath.acoustic` (Stemoscope raw, 48 kHz, archive only)
+- `breath.envelope` (RMS envelope of acoustic, 100 Hz, primary live signal)
+- `breath.rate`, `breath.phase`, `breath.depth` (derived from envelope, halcytone-breath)
+
+## The state contract: StateVector
+
+halcytone-core consumes SignalPackets and emits a fused StateVector. Every downstream module reads StateVectors, not raw signals.
+
+```python
+@dataclass
+class StateVector:
+    t_ns: int
+    session_id: str
+
+    # breath
+    breath_phase: float              # 0.0 to 1.0 around the cycle
+    breath_rate: float               # breaths per minute
+    breath_depth: float              # 0.0 to 1.0 normalized to baseline
+    breath_quality: float
+
+    # cardiovascular
+    heart_rate: float                # bpm
+    hrv_rmssd: float                 # ms, 30s window
+    hrv_quality: float
+
+    # autonomic
+    eda_level: float                 # microsiemens
+    eda_phasic: float                # short-window phasic component
+
+    # neural (Ganglion band power, normalized 0..1)
+    eeg_alpha: float
+    eeg_theta: float
+    eeg_beta: float
+    eeg_delta: float
+    eeg_gamma: float
+    eeg_quality: float
+
+    # composite (computed in core)
+    heart_breath_coherence: float    # 0.0 to 1.0
+    overall_presence: float          # composite score
+```
+
+Flat struct by choice. Downstream modules want one frame per tick, not a bag of streams to re-align. Core aligns once, emits a flat record, done.
+
+### Cadence
+
+StateVector publishes at 200 Hz as a latest-value cache. Consumers read on their own cadence, no throttling or subsampling. Audio thread polls at synth rate, PyQt HUD paints at 30 Hz on its own timer. Inside core, the cache is an atomic reference updated every fusion tick.
+
+## Session protocol
+
+Every run creates one session.
+
+Lifecycle:
+
+1. **Preflight.** Core verifies each declared sensor is publishing an LSL stream. Missing sensors either abort the session or are marked optional per session config.
+2. **Baseline.** 60-second quiet capture. Establishes per-session means for EDA, HRV, breath depth, EEG band power. Stored in session manifest.
+3. **Active.** Live fusion, StateVector emission, downstream modules running.
+4. **Teardown.** Stop capture, flush logs, invoke halcytone-publish.
+
+Session ID format: `{YYYYMMDD}-{HHMMSS}-{slug4}` where slug4 is a 4-char random suffix. Example: `20260417-143022-k7m2`.
+
+### Control messages (inside core only)
+
+```python
+SessionStart(session_id, config)
+SessionStop()
+Annotation(t_ns, label, data)       # user or module annotation
+MapperConfigUpdate(params)          # live tuning of parameter mapper
+```
+
+Python messages on an asyncio in-process bus. Never leave the core process. Cross-process signals stay on LSL.
+
+## Storage
+
+Two formats, different purposes:
+
+**SQLite** at `~/halcytone/halcytone.db`: session metadata, baselines, annotations, computed session summaries. Queryable for longitudinal analysis. Tables: `sessions`, `baselines`, `annotations`, `state_summaries`. Full DDL in `halcytone_contracts.storage`.
+
+**XDF** at `~/halcytone/sessions/{id}/signals.xdf`: raw LSL recording. Every stream in the session at full sample rate, LSL timestamps preserved. Read with `pyxdf` for offline analysis.
+
+## Session bundle (filesystem handoff)
+
+halcytone-publish writes each completed session to:
+
+```
+~/halcytone/sessions/{session_id}/
+  manifest.yaml     session metadata, sensor roster, duration, baselines, summary
+  video.mp4         HUD video + soundscape audio, composed by ffmpeg
+  audio.wav         soundscape only (optional standalone)
+  signals.xdf       raw LSL recording
+  state.jsonl       per-tick StateVector log
+  notes.md          post-session notes (manual)
+```
+
+AgentGrounds (separate future project) watches `~/halcytone/sessions/` and picks up sessions where `manifest.yaml` has `ended_at` set. That field is the completion marker.
+
+Manifest schema (shortened; full schema lives in `halcytone_contracts.bundles`):
+
+```yaml
+session_id: 20260417-143022-k7m2
+started_at: 2026-04-17T14:30:22Z
+ended_at: 2026-04-17T15:02:47Z
+duration_s: 1945
+sensors: [...]
+baselines: {hrv_rmssd: 48.3, breath_rate: 6.2, ...}
+summary: {mean_hr: 62.1, mean_hrv: 51.7, ...}
+artifacts: {video: video.mp4, ...}
+```
+
+## Repo roster
+
+| Repo | Role | Depends on |
+|------|------|------------|
+| halcytone-contracts | this repo: schemas, types, protocol | nothing |
+| halcytone-core | fusion, session lifecycle, storage | contracts |
+| halcytone-sensors | adapters (stemoscope, ganglion, emotibit, simulator) | contracts |
+| halcytone-audio | parameter mapper + native python synth | contracts |
+| halcytone-hud | PyQt live HUD | contracts |
+| halcytone-breath | breath analysis (extracted later) | contracts |
+| halcytone-publish | ffmpeg composer, session bundler (later) | contracts |
+
+## Non-goals for v1
+
+- Multi-user sessions. Single user, single rig.
+- Cloud storage. Filesystem only.
+- Network distribution. AgentGrounds handles that separately.
+- Plugin architecture. No dynamic loading.
+- Real-time audio latency SLAs. Best effort, <100ms target, not contractual.
+- Hot reload. Start a new session to change config.
+
+## Open design questions
+
+None open at spec time. This section gets repopulated as implementation surfaces new decisions.
