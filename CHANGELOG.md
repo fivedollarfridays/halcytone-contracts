@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project f
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-04-17
+
+### Changed
+
+- Relicensed from `Proprietary` to `Apache-2.0`. Added `LICENSE` file at repo root and OSI classifier in `pyproject.toml`. The contract surface, wire format, and SQL DDL are now open under Apache 2.0 — the "broadcast" side of Halcytone remains separately licensed.
+- Bumped `__contract_version__` to `0.1.1`. No schema or API changes — this is a licensing-only patch. Consumers pinned to `>=0.1,<0.2` will pick it up automatically; `check_contract_version("0.1.0")` still passes (patch-only mismatch is a no-op).
+
 ## [0.1.0] — 2026-04-17
 
 ### Added
@@ -22,5 +29,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project f
 - `ROADMAP.md` and this `CHANGELOG.md`.
 - `README.md` Versioning section documenting the semver policy, downstream pin pattern (`halcytone-contracts>=0.1,<0.2`), and `check_contract_version` runtime pattern.
 
-[Unreleased]: https://github.com/halcytone/halcytone-contracts/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/halcytone/halcytone-contracts/releases/tag/v0.1.0
+[Unreleased]: https://github.com/fivedollarfridays/halcytone-contracts/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/fivedollarfridays/halcytone-contracts/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/fivedollarfridays/halcytone-contracts/releases/tag/v0.1.0

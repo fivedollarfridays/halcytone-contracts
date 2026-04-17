@@ -26,3 +26,4 @@ agent_pack.tgz
 .paircoder/feedback/calibration.json
 .paircoder/telemetry/**
 # <<< paircoder managed
+.paircoder-workspace.yaml

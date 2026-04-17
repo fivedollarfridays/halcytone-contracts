@@ -36,7 +36,7 @@ from halcytone_contracts.storage import (
     read_ddl,
 )
 
-__contract_version__: str = "0.1.0"
+__contract_version__: str = "0.1.1"
 __version__: str = __contract_version__
 
 __all__ = [
