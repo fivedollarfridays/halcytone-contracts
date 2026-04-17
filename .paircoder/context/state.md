@@ -71,6 +71,8 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+- **T2.2 done** (auto-updated by hook)
+
 ### Session: 2026-04-17 — T2.2 SessionSummary pydantic model (versioned) (Driver)
 
 - TDD: wrote `tests/test_summary.py` (34 tests) covering construction from sample, exact field set, **field-declaration order** (asserts `summary_schema_version` is the first field via `next(iter(model_fields))`), default-of-1 when omitted, `extra="forbid"`, schema-version bound (rejects 0 and -1, accepts higher integers like 7 so future bumps parse), parametrized `[0,1]` rejection (below-zero and above-one for each of `mean_breath_depth`, `mean_eeg_alpha`, `mean_eeg_theta`, `mean_overall_presence`, `peak_heart_breath_coherence`) plus inclusive-edge acceptance (0.0 and 1.0), `total_annotations` bound (rejects -1, accepts 0), unbounded sanity for `mean_hr`/`mean_breath_rate`, and JSON round-trip (direct + via dict).
