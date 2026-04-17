@@ -25,7 +25,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 | T1.3 | state.py (StateVector) | 35 | P0 | 1 | ✓ done | T1.1 |
 | T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | ✓ done | T1.1 |
 | T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | ✓ done | T1.1 |
-| T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | pending | T1.4 |
+| T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | ✓ done | T1.4 |
 | T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | pending | T1.2, T1.3, T1.4, T1.5 |
 | T1.8 | ROADMAP, CHANGELOG, versioning docs | 15 | P1 | 3 | pending | T1.7 |
 
@@ -53,7 +53,15 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T1.5 done** (storage.sql + storage.py loader)
+- **T1.6 done** (bundles/manifest.py + generated manifest.schema.json)
+
+### Session: 2026-04-17 — T1.6 bundles/manifest.py + manifest.schema.json (Driver)
+
+- TDD: wrote `tests/test_manifest.py` (12 tests) covering complete payload acceptance, invalid `session_id` rejection (via T1.4's `SESSION_ID_REGEX`), `extra="forbid"`, `ended_at` tri-state (None / populated / missing-defaults-to-None), YAML round-trip for both in-progress and completed sessions, checked-in schema presence, `model_json_schema()` parity, subprocess byte-equality against `scripts/regen_manifest_schema.py --stdout` (CI drift guard), and `importlib.resources` verification that the JSON ships inside the installed package.
+- Added `halcytone_contracts/bundles/__init__.py` re-exporting `SessionManifest`, and `halcytone_contracts/bundles/manifest.py` with the pydantic v2 model (`session_id`, `started_at`, `ended_at: Optional[datetime] = None`, `duration_s`, `sensors`, `baselines`, `summary`, `artifacts`). `session_id` is regex-validated via `field_validator` importing `SESSION_ID_REGEX` from `halcytone_contracts.session` — T1.4 stays the single source of truth for the format.
+- Added `scripts/regen_manifest_schema.py` — argparse CLI with a `--stdout` mode used by the drift test. Canonical rendering is `json.dumps(schema, indent=2, sort_keys=True) + "\n"` so ordering is deterministic across reruns.
+- Generated and committed `halcytone_contracts/bundles/manifest.schema.json`. Updated `pyproject.toml` with `"halcytone_contracts.bundles" = ["*.json"]` package-data entry so the schema ships inside the installed wheel/sdist.
+- Verified: `pytest` **217 passed** (12 new + 205 carried), `ruff check` clean on changed files, `bpsai-pair arch check halcytone_contracts/bundles/manifest.py` clean (also checked `__init__.py` and the regen script). AC all satisfied.
 
 ### Session: 2026-04-17 — T1.5 storage.sql + storage.py loader (Driver)
 
@@ -114,8 +122,8 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 1. Wave 0 (T1.1) complete — scaffold landed and verified.
 2. Wave 1 complete: T1.2 ✓, T1.3 ✓, T1.4 ✓, T1.5 ✓. All Wave 2 dependencies are satisfied.
-4. Wave 2 (T1.6, T1.7) ready to start; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2 and wires `REQUIRED_SCHEMA_VERSION = SCHEMA_VERSION`.
-5. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
+3. Wave 2 partial: T1.6 ✓ done. T1.7 ready to start — re-exports everything from Waves 1+2 and wires `REQUIRED_SCHEMA_VERSION = SCHEMA_VERSION`.
+4. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
 
 ## Blockers
 

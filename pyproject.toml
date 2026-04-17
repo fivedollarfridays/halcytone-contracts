@@ -35,6 +35,7 @@ exclude = ["tests*"]
 
 [tool.setuptools.package-data]
 halcytone_contracts = ["*.sql"]
+"halcytone_contracts.bundles" = ["*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

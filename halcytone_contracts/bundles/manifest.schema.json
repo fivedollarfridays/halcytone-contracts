@@ -1,0 +1,71 @@
+{
+  "additionalProperties": false,
+  "description": "Metadata for a completed-or-in-progress session bundle on disk.",
+  "properties": {
+    "artifacts": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Artifacts",
+      "type": "object"
+    },
+    "baselines": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Baselines",
+      "type": "object"
+    },
+    "duration_s": {
+      "title": "Duration S",
+      "type": "integer"
+    },
+    "ended_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ended At"
+    },
+    "sensors": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Sensors",
+      "type": "array"
+    },
+    "session_id": {
+      "title": "Session Id",
+      "type": "string"
+    },
+    "started_at": {
+      "format": "date-time",
+      "title": "Started At",
+      "type": "string"
+    },
+    "summary": {
+      "additionalProperties": {
+        "type": "number"
+      },
+      "title": "Summary",
+      "type": "object"
+    }
+  },
+  "required": [
+    "session_id",
+    "started_at",
+    "duration_s",
+    "sensors",
+    "baselines",
+    "summary",
+    "artifacts"
+  ],
+  "title": "SessionManifest",
+  "type": "object"
+}
