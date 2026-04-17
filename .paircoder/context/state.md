@@ -22,7 +22,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 |------|-------|----|-----|------|--------|---------|
 | T1.1 | Package scaffold + pyproject | 15 | P0 | 0 | ✓ done | — |
 | T1.2 | signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) | 50 | P0 | 1 | ✓ done | T1.1 |
-| T1.3 | state.py (StateVector) | 35 | P0 | 1 | pending | T1.1 |
+| T1.3 | state.py (StateVector) | 35 | P0 | 1 | ✓ done | T1.1 |
 | T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | pending | T1.1 |
 | T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | pending | T1.1 |
 | T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | pending | T1.4 |
@@ -52,6 +52,17 @@ Wave 3:                        T1.8
 No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
+
+- **T1.3 done** (state.py StateVector)
+
+### Session: 2026-04-17 — T1.3 state.py (StateVector) (Driver)
+
+- TDD: wrote `tests/test_state.py` (71 tests) covering field set, flat-struct invariant (no nested pydantic sub-models), field types, extra="forbid" rejection, `[0,1]` bounds on `breath_phase`/`breath_depth`/`heart_breath_coherence`/`overall_presence`/all `eeg_*` normalized fields (incl. inclusive edges 0.0/1.0), JSON round-trip, dict round-trip, JSONL single-line shape, `json.loads` compatibility, multi-record JSONL roundtrip.
+- Added `halcytone_contracts/state.py`:
+  - `StateVector` pydantic v2 model with every field from README spec (`t_ns`, `session_id`, breath/cardiovascular/autonomic/neural/composite blocks — 19 fields total).
+  - `_Unit = Annotated[float, Field(ge=0.0, le=1.0)]` applied to the 10 normalized fields per AC; unbounded `float` for rate/level/ms/µS quantities.
+  - `extra="forbid"` to match `SignalPacket` contract style.
+- Verified: `pytest` 118 passed (71 new + 47 carried), `ruff check` clean, `bpsai-pair arch check halcytone_contracts/state.py` clean.
 
 ### Session: 2026-04-17 — T1.2 signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) (Driver)
 
@@ -83,7 +94,7 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 ## What's Next
 
 1. Wave 0 (T1.1) complete — scaffold landed and verified.
-2. Wave 1: T1.2 ✓ done. T1.3, T1.4, T1.5 remain — can still run in parallel, no file overlap.
+2. Wave 1: T1.2 ✓ done, T1.3 ✓ done. T1.4, T1.5 remain — can still run in parallel, no file overlap.
 4. Wave 2 (T1.6, T1.7) gates on Wave 1 outputs; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2.
 5. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
 
