@@ -24,7 +24,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 | T1.2 | signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) | 50 | P0 | 1 | ✓ done | T1.1 |
 | T1.3 | state.py (StateVector) | 35 | P0 | 1 | ✓ done | T1.1 |
 | T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | ✓ done | T1.1 |
-| T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | pending | T1.1 |
+| T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | ✓ done | T1.1 |
 | T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | pending | T1.4 |
 | T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | pending | T1.2, T1.3, T1.4, T1.5 |
 | T1.8 | ROADMAP, CHANGELOG, versioning docs | 15 | P1 | 3 | pending | T1.7 |
@@ -53,7 +53,15 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T1.4 done** (session.py control messages + session_id helpers)
+- **T1.5 done** (storage.sql + storage.py loader)
+
+### Session: 2026-04-17 — T1.5 storage.sql + storage.py loader (Driver)
+
+- TDD: wrote `tests/test_storage.py` (17 tests) covering `read_ddl()` return type + purity, importlib.resources parity with the on-disk `.sql`, presence of each expected table name in the DDL text, idempotency assertion (all `CREATE TABLE` statements use `IF NOT EXISTS` — no non-idempotent variants), `SCHEMA_VERSION` int-ness/positivity, parametrized `PRAGMA table_info` smoke per table, `meta` seed row equals `str(SCHEMA_VERSION)`, re-apply idempotency (second `executescript` raises nothing and schema_version is still a single row), and shape sanity checks on `sessions.session_id`, `annotations.{t_ns,label}`, and `meta.{key,value}`.
+- Added `halcytone_contracts/storage.sql`: raw DDL for `meta`, `sessions`, `baselines`, `annotations`, `state_summaries`. Every `CREATE TABLE` uses `IF NOT EXISTS`; the schema_version seed uses `INSERT OR IGNORE` so re-apply never duplicates or overwrites. FK columns reference `sessions(session_id)` where appropriate. No ORM, no migrations framework — downstream repos wrap this directly.
+- Added `halcytone_contracts/storage.py`: `SCHEMA_VERSION: int = 1` matching the seeded row, and `read_ddl() -> str` reading the packaged `.sql` via `importlib.resources.files("halcytone_contracts").joinpath("storage.sql").read_text(...)`. Module is 28 lines, one public function — well under arch-check thresholds.
+- Updated `pyproject.toml` with `[tool.setuptools.package-data] halcytone_contracts = ["*.sql"]` so the DDL ships inside the installed wheel/sdist (importlib.resources would otherwise miss the non-`.py` file post-install).
+- Verified: `pytest` **205 passed** (17 new + 188 carried), `ruff check .` clean, `bpsai-pair arch check halcytone_contracts/storage.py` clean, `pip install -e .` round-trip confirms `read_ddl()` returns the packaged `.sql` content after install.
 
 ### Session: 2026-04-17 — T1.4 session.py (control messages + session_id) (Driver)
 
@@ -105,8 +113,8 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 ## What's Next
 
 1. Wave 0 (T1.1) complete — scaffold landed and verified.
-2. Wave 1: T1.2 ✓ done, T1.3 ✓ done, T1.4 ✓ done. T1.5 remains — unblocks T1.7.
-4. Wave 2 (T1.6, T1.7) gates on Wave 1 outputs; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2.
+2. Wave 1 complete: T1.2 ✓, T1.3 ✓, T1.4 ✓, T1.5 ✓. All Wave 2 dependencies are satisfied.
+4. Wave 2 (T1.6, T1.7) ready to start; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2 and wires `REQUIRED_SCHEMA_VERSION = SCHEMA_VERSION`.
 5. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
 
 ## Blockers
