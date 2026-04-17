@@ -23,7 +23,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 | T1.1 | Package scaffold + pyproject | 15 | P0 | 0 | ✓ done | — |
 | T1.2 | signals.py (SignalPacket + StreamSpec + RESERVED_STREAMS) | 50 | P0 | 1 | ✓ done | T1.1 |
 | T1.3 | state.py (StateVector) | 35 | P0 | 1 | ✓ done | T1.1 |
-| T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | pending | T1.1 |
+| T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | ✓ done | T1.1 |
 | T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | pending | T1.1 |
 | T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | pending | T1.4 |
 | T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | pending | T1.2, T1.3, T1.4, T1.5 |
@@ -53,7 +53,18 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T1.3 done** (state.py StateVector)
+- **T1.4 done** (session.py control messages + session_id helpers)
+
+### Session: 2026-04-17 — T1.4 session.py (control messages + session_id) (Driver)
+
+- TDD: wrote `tests/test_session.py` (70 tests) covering `SESSION_ID_REGEX` shape (well-formed / malformed parametrized), `format_session_id` zero-padding + slug validation, `parse_session_id` inverse-of-format round-trip + malformed rejection (wrong segment count, bad slug length/case/chars, non-numeric date/time, invalid calendar month / clock hour), `new_session_id` regex compliance + parseability + **1000-unique** stress, and per-model (required fields, extra="forbid", JSON round-trip) coverage for all four control messages.
+- Added `halcytone_contracts/session.py`:
+  - `SESSION_ID_REGEX = re.compile(r"^\d{8}-\d{6}-[0-9a-z]{4}$")` exported as module-level constant (README §"Session protocol" format: `{YYYYMMDD}-{HHMMSS}-{slug4}`).
+  - `format_session_id(dt, slug)` uses `dt.strftime("%Y%m%d-%H%M%S")` + slug; slug validated against `[0-9a-z]{4}`.
+  - `parse_session_id(s)` regex-guards then `strptime`s — invalid calendar/clock values bubble up as `ValueError`.
+  - `new_session_id()` combines UTC naive wall-clock with a thread-safe monotonic counter (random starting offset in `[0, 36**4)`, mod 1_679_616) so 1000 consecutive calls in a tight loop are guaranteed unique.
+  - Pydantic v2 models: `SessionStart(session_id, config)` with regex-enforcing `field_validator`, empty `SessionStop()`, `Annotation(t_ns, label, data)`, `MapperConfigUpdate(params)` — all `extra="forbid"` matching sibling contract style.
+- Verified: `pytest` **188 passed** (70 new + 118 carried), `ruff check .` clean, `bpsai-pair arch check halcytone_contracts/session.py` clean.
 
 ### Session: 2026-04-17 — T1.3 state.py (StateVector) (Driver)
 
@@ -94,7 +105,7 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 ## What's Next
 
 1. Wave 0 (T1.1) complete — scaffold landed and verified.
-2. Wave 1: T1.2 ✓ done, T1.3 ✓ done. T1.4, T1.5 remain — can still run in parallel, no file overlap.
+2. Wave 1: T1.2 ✓ done, T1.3 ✓ done, T1.4 ✓ done. T1.5 remains — unblocks T1.7.
 4. Wave 2 (T1.6, T1.7) gates on Wave 1 outputs; T1.6 needs T1.4's `SESSION_ID_REGEX`, T1.7 re-exports everything from Waves 1+2.
 5. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
 
