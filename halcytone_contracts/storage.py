@@ -16,6 +16,10 @@ from importlib import resources
 
 SCHEMA_VERSION: int = 1
 
+# Alias used by consumers to assert "the schema I pinned against is still the
+# one this package ships." Identical value, clearer intent at the call site.
+REQUIRED_SCHEMA_VERSION: int = SCHEMA_VERSION
+
 _DDL_RESOURCE = "storage.sql"
 
 
@@ -28,4 +32,4 @@ def read_ddl() -> str:
     )
 
 
-__all__ = ["SCHEMA_VERSION", "read_ddl"]
+__all__ = ["REQUIRED_SCHEMA_VERSION", "SCHEMA_VERSION", "read_ddl"]

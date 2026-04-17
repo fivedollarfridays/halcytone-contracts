@@ -26,7 +26,7 @@ Ship `halcytone-contracts` v0.1.0: a pip-installable Python package containing e
 | T1.4 | session.py (control messages + session_id) | 35 | P1 | 1 | ✓ done | T1.1 |
 | T1.5 | storage.sql + storage.py loader | 40 | P0 | 1 | ✓ done | T1.1 |
 | T1.6 | bundles/manifest.py + generated manifest.schema.json | 50 | P1 | 2 | ✓ done | T1.4 |
-| T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | pending | T1.2, T1.3, T1.4, T1.5 |
+| T1.7 | Drift helpers + top-level exports | 25 | P1 | 2 | ✓ done | T1.2, T1.3, T1.4, T1.5 |
 | T1.8 | ROADMAP, CHANGELOG, versioning docs | 15 | P1 | 3 | pending | T1.7 |
 
 > Cx totals above use the `plan add-task` 0–100 complexity scale (Cx points × ~8 per unit from the backlog's 32-Cx sprint budget). Backlog Cx columns: T1.1=2, T1.2=6, T1.3=4, T1.4=4, T1.5=5, T1.6=6, T1.7=3, T1.8=2.
@@ -53,7 +53,19 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+- **T1.7 done** (drift helpers + top-level exports)
+
+- **T1.6 done** (auto-updated by hook)
+
 - **T1.6 done** (bundles/manifest.py + generated manifest.schema.json)
+
+### Session: 2026-04-17 — T1.7 Drift helpers + top-level exports (Driver)
+
+- TDD: added `tests/test_drift.py` (22 tests) covering `ContractError` inheritance chain, `validate_stream_roster` happy paths (exact / superset / empty required / set / generator inputs) and failure modes (single + multi missing, all-missing, message names only missing streams and *not* extras), and `check_contract_version` across exact match, patch-only, minor bump/downgrade (warns), major bump/downgrade (raises), malformed / two-segment / empty strings (raise), plus no-op return sanity. Added `tests/test_exports.py` (10 tests) parsing `pyproject.toml` with `tomllib` to assert `__contract_version__` equality, `REQUIRED_SCHEMA_VERSION == SCHEMA_VERSION`, full `__all__` coverage of the 15 backlog-required names, and submodule-identity checks (re-exports point to the same objects, not copies).
+- Added `halcytone_contracts/drift.py`: `ContractError(RuntimeError)`, `validate_stream_roster(published, required)` (set-difference, sorted missing list in message for deterministic diffs), `check_contract_version(consumer_version)` with lazy `__contract_version__` import (breaks the otherwise-circular load order) and a small `_parse_semver` helper that routes every malformed-string failure through `ContractError`.
+- Updated `halcytone_contracts/storage.py` with `REQUIRED_SCHEMA_VERSION: int = SCHEMA_VERSION` alias and appended to `__all__`.
+- Rewrote `halcytone_contracts/__init__.py` to re-export the full public surface (`SignalPacket`, `StreamSpec`, `RESERVED_STREAMS`, `StateVector`, 4 session models, `SessionManifest`, `SCHEMA_VERSION`, `REQUIRED_SCHEMA_VERSION`, drift trio) and define `__contract_version__ = "0.1.0"` with `__version__` kept as an in-lockstep alias.
+- Verified: `pytest` **250 passed** (32 new + 218 carried), `ruff check .` clean, `bpsai-pair arch check` clean on `drift.py`, `__init__.py`, and `storage.py`. All 12 backlog ACs satisfied.
 
 ### Session: 2026-04-17 — T1.6 bundles/manifest.py + manifest.schema.json (Driver)
 
@@ -121,9 +133,9 @@ No deprioritized items. All backlog entries pulled into the active sprint.
 ## What's Next
 
 1. Wave 0 (T1.1) complete — scaffold landed and verified.
-2. Wave 1 complete: T1.2 ✓, T1.3 ✓, T1.4 ✓, T1.5 ✓. All Wave 2 dependencies are satisfied.
-3. Wave 2 partial: T1.6 ✓ done. T1.7 ready to start — re-exports everything from Waves 1+2 and wires `REQUIRED_SCHEMA_VERSION = SCHEMA_VERSION`.
-4. Wave 3 (T1.8) is docs-only and must land last so it can reference the final `check_contract_version` API.
+2. Wave 1 complete: T1.2 ✓, T1.3 ✓, T1.4 ✓, T1.5 ✓.
+3. Wave 2 complete: T1.6 ✓, T1.7 ✓. Public surface is fully wired; `__contract_version__`, `REQUIRED_SCHEMA_VERSION`, and the drift helpers (`validate_stream_roster`, `check_contract_version`, `ContractError`) are exported at the top level.
+4. Wave 3 (T1.8) ready to start — ROADMAP / CHANGELOG / versioning docs, now able to reference the concrete `check_contract_version` API.
 
 ## Blockers
 
