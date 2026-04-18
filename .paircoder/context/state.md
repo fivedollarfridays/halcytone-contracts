@@ -28,7 +28,7 @@ Tighten `SessionManifest` from two untyped dicts (`baselines`, `summary`) into f
 | T2.2 | SessionSummary pydantic model (versioned) | 4 | P0 | 0 | ✓ done | — |
 | T2.3 | SessionManifest rewire + regenerated schema | 5 | P0 | 1 | ✓ done | T2.1, T2.2 |
 | T2.4 | Top-level exports for Baseline + SessionSummary | 2 | P0 | 1 | ✓ done | T2.1, T2.2 |
-| T2.5 | Bump to v0.2.0 + CHANGELOG + ROADMAP | 2 | P0 | 2 | pending | T2.3, T2.4 |
+| T2.5 | Bump to v0.2.0 + CHANGELOG + ROADMAP | 2 | P0 | 2 | ✓ done | T2.3, T2.4 |
 
 ### Dependency Graph
 
@@ -71,7 +71,13 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T2.4 done** (auto-updated by hook)
+### Session: 2026-04-18 — T2.5 Bump to v0.2.0 + CHANGELOG + ROADMAP (Driver)
+
+- Cut v0.2.0: `pyproject.toml version = "0.2.0"` and `__contract_version__ = "0.2.0"` in lockstep; `test_exports.py::test_matches_pyproject` stays green against the bumped pair.
+- `CHANGELOG.md`: new `[0.2.0] — 2026-04-18` section with `### Changed` (two breaking items: `SessionManifest.baselines` and `.summary` field-type changes, regen'd schema mirror, `__contract_version__` bump under 0.x sharpened policy), `### Added` (new `baseline` + `summary` submodules, three new top-level exports — public surface 21 → 24), and a `### Migration` block pointing consumers to re-pin `>=0.2,<0.3` and rewrite any dict-literal manifest constructions. Link section updated.
+- `ROADMAP.md` restructured: v0.1.0 / v0.1.1 / v0.2.0 sections marked "shipped" with concrete deliverables; v0.3.0 promoted and narrowed to "sibling-repo enablement + remaining data-model tightening" (paircoder template scaffold moved here from v0.2.0, stream-metadata extensions + DDL migration + pylsl stubs retained).
+- Verified: `pytest` **336 passed**, `ruff check .` clean, schema-drift check clean (regen byte-equal to committed file). All 7 T2.5 ACs satisfied.
+- **Sprint 2 complete:** 5/5 tasks done; v0.2.0 ready to tag once the PR merges. Halcytone-core sprint-2 backlog unblocks as soon as the `v0.2.0` tag is pushed.
 
 ### Session: 2026-04-18 — T2.4 Top-level exports for Baseline + SessionSummary (Driver)
 

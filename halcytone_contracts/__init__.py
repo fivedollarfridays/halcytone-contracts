@@ -38,7 +38,7 @@ from halcytone_contracts.storage import (
 )
 from halcytone_contracts.summary import SessionSummary
 
-__contract_version__: str = "0.1.1"
+__contract_version__: str = "0.2.0"
 __version__: str = __contract_version__
 
 __all__ = [

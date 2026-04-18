@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "halcytone-contracts"
-version = "0.1.1"
+version = "0.2.0"
 description = "Shared Pydantic schemas, JSON Schema exports, SQL DDL, and protocol contracts for the Halcytone fleet."
 readme = "README.md"
 requires-python = ">=3.11"
