@@ -1,6 +1,6 @@
 # Current State
 
-> Last updated: 2026-04-17
+> Last updated: 2026-04-18
 
 ## Active Plan
 
@@ -26,7 +26,7 @@ Tighten `SessionManifest` from two untyped dicts (`baselines`, `summary`) into f
 |------|-------|----|-----|------|--------|---------|
 | T2.1 | Baseline + StreamBaseline pydantic models | 4 | P0 | 0 | ✓ done | — |
 | T2.2 | SessionSummary pydantic model (versioned) | 4 | P0 | 0 | ✓ done | — |
-| T2.3 | SessionManifest rewire + regenerated schema | 5 | P0 | 1 | pending | T2.1, T2.2 |
+| T2.3 | SessionManifest rewire + regenerated schema | 5 | P0 | 1 | ✓ done | T2.1, T2.2 |
 | T2.4 | Top-level exports for Baseline + SessionSummary | 2 | P0 | 1 | pending | T2.1, T2.2 |
 | T2.5 | Bump to v0.2.0 + CHANGELOG + ROADMAP | 2 | P0 | 2 | pending | T2.3, T2.4 |
 
@@ -71,7 +71,14 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T2.2 done** (auto-updated by hook)
+### Session: 2026-04-18 — T2.3 SessionManifest rewire + regenerated schema (Driver)
+
+- TDD RED: updated `tests/test_manifest.py` to expect typed fields before changing the model — added `_example_baseline()` / `_example_summary()` helpers that build `Baseline` + `SessionSummary` shapes (multi-stream baseline with `hrv.rmssd` / `breath.rate` / `eda`; full summary including `summary_schema_version=1`), revised `test_manifest_accepts_complete_payload` to assert `.baselines.streams["hrv.rmssd"].mean`, added `test_manifest_baselines_is_typed_Baseline_model` + `test_manifest_summary_is_typed_SessionSummary_model` identity checks, breaking-change migration helpers `test_manifest_rejects_dict_shaped_baselines` / `..._summary`, cross-module `test_manifest_rejects_baseline_with_unknown_stream_key` (proves `Baseline`'s `RESERVED_STREAMS` validator fires through `SessionManifest`), and `test_manifest_yaml_roundtrip_with_populated_baseline_and_summary` covering the full v0.2.0 YAML shape. 11 failures as expected.
+- TDD GREEN: rewrote `halcytone_contracts/bundles/manifest.py` — `baselines: Baseline`, `summary: SessionSummary` (replaces both `dict[str, float]` fields), added imports from `halcytone_contracts.baseline` and `halcytone_contracts.summary`, refreshed the module docstring with the v0.2.0 typing note. All `bundles/` tests green.
+- Regenerated `halcytone_contracts/bundles/manifest.schema.json` via `scripts/regen_manifest_schema.py` — the new schema has a `$defs` block for `Baseline`, `StreamBaseline`, `SessionSummary` (all with correct bounds and required arrays), and the manifest's `baselines` / `summary` properties switch from `additionalProperties: number` to `$ref: '#/$defs/...'`. Idempotency verified by a second regen + diff.
+- Rewrote the README manifest-example YAML block (lines 157-190) to reflect the new shape — multi-stream baseline dict with real stream names (`hrv.rmssd`, `breath.rate`, `eda`), all nine `SessionSummary` numeric fields plus `summary_schema_version`, and a trailing note that baseline keys are `RESERVED_STREAMS`-validated and the version field lets consumers branch on shape. Links to `ROADMAP.md` / `CHANGELOG.md` still resolve.
+- Verified: `pytest` **336 passed** (up from 272; T2.1 + T2.2 + T2.3 coverage now included), `ruff check .` clean, `bpsai-pair arch check halcytone_contracts/bundles/manifest.py` clean, schema-drift detection working (regen output byte-equal to committed file). All 9 T2.3 ACs satisfied.
+- Unblocks T2.4 (top-level exports for `Baseline` / `StreamBaseline` / `SessionSummary`) and T2.5 (v0.2.0 bump + CHANGELOG + ROADMAP).
 
 ### Session: 2026-04-17 — T2.2 SessionSummary pydantic model (versioned) (Driver)
 
