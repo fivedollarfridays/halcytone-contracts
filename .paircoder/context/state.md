@@ -71,6 +71,8 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+- **T2.4 done** (auto-updated by hook)
+
 ### Session: 2026-04-18 — T2.4 Top-level exports for Baseline + SessionSummary (Driver)
 
 - TDD: added `Baseline`, `StreamBaseline`, `SessionSummary` to `tests/test_exports.py::REQUIRED_EXPORTS` (now 24 names) and expanded `test_models_identity_matches_submodules` with identity assertions for the three new classes. Confirmed RED via `AttributeError: module 'halcytone_contracts' has no attribute 'Baseline'`.
