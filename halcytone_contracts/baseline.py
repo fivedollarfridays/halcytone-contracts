@@ -28,7 +28,15 @@ class StreamBaseline(BaseModel):
 
 
 class Baseline(BaseModel):
-    """Per-session baseline: stream -> StreamBaseline, plus capture window."""
+    """Per-session baseline: stream -> StreamBaseline, plus capture window.
+
+    `streams` must contain at least one entry — a session that captured no
+    baselines is not representable in v0.2.0 (the manifest field is
+    non-optional by design; revisit if a use case emerges). Every dict key
+    must be a reserved name from `halcytone_contracts.signals.RESERVED_STREAMS`;
+    unknown keys raise `ValidationError` with a sorted list of the
+    offenders in the message.
+    """
 
     model_config = ConfigDict(frozen=False, extra="forbid")
 
@@ -43,10 +51,11 @@ class Baseline(BaseModel):
     ) -> dict[str, StreamBaseline]:
         if not v:
             raise ValueError("streams must contain at least one entry")
-        unknown = sorted(k for k in v if k not in RESERVED_STREAMS)
+        unknown = [k for k in v if k not in RESERVED_STREAMS]
         if unknown:
             raise ValueError(
-                "unknown stream name(s) not in RESERVED_STREAMS: " + ", ".join(unknown)
+                "unknown stream name(s) not in RESERVED_STREAMS: "
+                + ", ".join(sorted(unknown))
             )
         return v
 

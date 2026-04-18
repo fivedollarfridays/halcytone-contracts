@@ -16,6 +16,16 @@ consumers can key logic off the shape. To evolve the contract:
 3. Consumers branch on `summary.summary_schema_version` — older bundles
    keep their original integer and read with the old code path; new
    bundles carry the bumped version and unlock the new shape.
+
+A bundle written under the current contract serializes
+`summary_schema_version: 1` into its YAML/JSON payload explicitly — the
+default isn't a runtime fallback during deserialization; it's a
+construct-time convenience. That means old bundles **on disk** already
+carry their version number, and will keep parsing under any future
+`SessionSummary` whose default has bumped higher. Do not remove the
+default when bumping — the ergonomics during construction matter, and
+the back-compat guarantee comes from the serialized value, not the
+default.
 """
 
 from __future__ import annotations

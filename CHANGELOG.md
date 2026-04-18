@@ -19,7 +19,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). This project f
 
 - `halcytone_contracts.baseline` — new module with `Baseline` + `StreamBaseline` pydantic v2 models. `Baseline.streams` dict keys validated against `RESERVED_STREAMS`; unknown stream names raise with a message naming the offending stream. `duration_s ≥ 1`, `stddev ≥ 0`, `sample_count ≥ 1`.
 - `halcytone_contracts.summary` — new module with `SessionSummary` pydantic v2 model. First field is `summary_schema_version: int = Field(default=1, ge=1)` so downstream consumers can branch on shape as the summary evolves. Bumping recipe documented in the module docstring.
-- Top-level exports: `Baseline`, `StreamBaseline`, `SessionSummary` (public surface grows from 21 to 24 names).
+- Top-level exports: `Baseline`, `StreamBaseline`, `SessionSummary` (documented public surface grows from 21 to 24 names; `__all__` is 25 when counting the legacy `__version__` alias kept in lockstep with `__contract_version__`).
 
 ### Migration
 

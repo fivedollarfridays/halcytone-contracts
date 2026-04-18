@@ -141,19 +141,35 @@ def test_manifest_summary_is_typed_SessionSummary_model() -> None:
 
 
 def test_manifest_rejects_dict_shaped_baselines() -> None:
-    """Breaking-change migration helper: dict[str, float] no longer valid."""
+    """Breaking-change migration helper: dict[str, float] no longer valid.
+
+    The error must name the required `Baseline` fields so a downstream dev
+    migrating from v0.1.x can diff the message against their code without
+    reading our source.
+    """
     payload = _example_payload()
     payload["baselines"] = {"hrv.rmssd": 48.3, "breath.rate": 6.2}
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         SessionManifest(**payload)
+    message = str(exc_info.value)
+    assert "streams" in message
+    assert "duration_s" in message
+    assert "captured_at" in message
 
 
 def test_manifest_rejects_dict_shaped_summary() -> None:
-    """Breaking-change migration helper: dict[str, float] no longer valid."""
+    """Breaking-change migration helper: dict[str, float] no longer valid.
+
+    The error must point at the `SessionSummary` required fields so
+    downstream dev-ex mirrors the baselines migration.
+    """
     payload = _example_payload()
     payload["summary"] = {"mean_hr": 62.1, "mean_presence": 0.72}
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as exc_info:
         SessionManifest(**payload)
+    message = str(exc_info.value)
+    assert "mean_hrv_rmssd" in message
+    assert "mean_breath_rate" in message
 
 
 def test_manifest_rejects_baseline_with_unknown_stream_key() -> None:

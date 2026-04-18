@@ -28,7 +28,7 @@ Scope for each release band. Dates are intentional omissions — milestones ship
 - **`halcytone_contracts.summary`** — versioned `SessionSummary` model (first field `summary_schema_version: int`, default 1) so consumers can branch on shape as summary evolves.
 - **`SessionManifest` rewire** — `baselines: Baseline`, `summary: SessionSummary` (was both `dict[str, float]`).
 - Regenerated `manifest.schema.json` with `$defs` block for the three new models + `$ref`s in the manifest properties.
-- Top-level exports for `Baseline`, `StreamBaseline`, `SessionSummary` (public surface now 24 names).
+- Top-level exports for `Baseline`, `StreamBaseline`, `SessionSummary` (documented public surface now 24 names; `__all__` is 25 including the `__version__` legacy alias).
 - CHANGELOG migration note; `check_contract_version("0.1.x")` now hard-fails at runtime per the 0.x sharpened policy.
 
 ## v0.3.0 — next minor (breaking allowed under 0.x)

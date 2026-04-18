@@ -2,7 +2,7 @@
   "$defs": {
     "Baseline": {
       "additionalProperties": false,
-      "description": "Per-session baseline: stream -> StreamBaseline, plus capture window.",
+      "description": "Per-session baseline: stream -> StreamBaseline, plus capture window.\n\n`streams` must contain at least one entry \u2014 a session that captured no\nbaselines is not representable in v0.2.0 (the manifest field is\nnon-optional by design; revisit if a use case emerges). Every dict key\nmust be a reserved name from `halcytone_contracts.signals.RESERVED_STREAMS`;\nunknown keys raise `ValidationError` with a sorted list of the\noffenders in the message.",
       "properties": {
         "captured_at": {
           "format": "date-time",
