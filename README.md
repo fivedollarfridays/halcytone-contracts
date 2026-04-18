@@ -154,18 +154,40 @@ halcytone-publish writes each completed session to:
 
 AgentGrounds (separate future project) watches `~/halcytone/sessions/` and picks up sessions where `manifest.yaml` has `ended_at` set. That field is the completion marker.
 
-Manifest schema (shortened; full schema lives in `halcytone_contracts.bundles`):
+Manifest schema (shortened; full schema lives in `halcytone_contracts.bundles` and the generated `manifest.schema.json`). As of v0.2.0, `baselines` and `summary` are typed pydantic models (`Baseline`, `SessionSummary`) rather than free-form dicts:
 
 ```yaml
 session_id: 20260417-143022-k7m2
 started_at: 2026-04-17T14:30:22Z
 ended_at: 2026-04-17T15:02:47Z
 duration_s: 1945
-sensors: [...]
-baselines: {hrv_rmssd: 48.3, breath_rate: 6.2, ...}
-summary: {mean_hr: 62.1, mean_hrv: 51.7, ...}
-artifacts: {video: video.mp4, ...}
+sensors: [ganglion-01, emotibit-01, stemoscope-01]
+baselines:
+  streams:
+    hrv.rmssd:   {mean: 48.3, stddev: 4.2, sample_count: 30}
+    breath.rate: {mean:  6.2, stddev: 0.8, sample_count: 60}
+    eda:         {mean:  2.1, stddev: 0.3, sample_count: 60}
+  duration_s: 60
+  captured_at: 2026-04-17T14:30:22Z
+summary:
+  summary_schema_version: 1
+  mean_hr: 62.1
+  mean_hrv_rmssd: 48.3
+  mean_breath_rate: 6.2
+  mean_breath_depth: 0.7
+  mean_eeg_alpha: 0.35
+  mean_eeg_theta: 0.25
+  mean_overall_presence: 0.72
+  peak_heart_breath_coherence: 0.68
+  total_annotations: 3
+artifacts:
+  video: video.mp4
+  audio: audio.wav
+  signals: signals.xdf
+  state: state.jsonl
 ```
+
+Baseline stream keys are validated against `RESERVED_STREAMS` — unknown names are rejected at parse time. `summary_schema_version` lets consumers branch on shape as the summary evolves in later releases.
 
 ## Repo roster
 
