@@ -7,6 +7,6 @@ phases:
   - T2.3
   - T2.4
   - T2.5
-status: in_progress
+status: complete
 title: Sprint 2
 type: feature

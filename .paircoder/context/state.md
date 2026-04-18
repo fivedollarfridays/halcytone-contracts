@@ -71,6 +71,8 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+- **T2.5 done** (auto-updated by hook)
+
 ### Session: 2026-04-18 — T2.5 Bump to v0.2.0 + CHANGELOG + ROADMAP (Driver)
 
 - Cut v0.2.0: `pyproject.toml version = "0.2.0"` and `__contract_version__ = "0.2.0"` in lockstep; `test_exports.py::test_matches_pyproject` stays green against the bumped pair.
