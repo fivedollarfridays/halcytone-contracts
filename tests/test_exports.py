@@ -66,6 +66,9 @@ REQUIRED_EXPORTS = (
     "parse_session_id",
     "new_session_id",
     "SessionManifest",
+    "Baseline",
+    "StreamBaseline",
+    "SessionSummary",
     "SCHEMA_VERSION",
     "REQUIRED_SCHEMA_VERSION",
     "read_ddl",
@@ -87,6 +90,7 @@ class TestPublicSurface:
         assert not missing, f"not importable: {missing}"
 
     def test_models_identity_matches_submodules(self) -> None:
+        from halcytone_contracts.baseline import Baseline, StreamBaseline
         from halcytone_contracts.bundles.manifest import SessionManifest
         from halcytone_contracts.session import (
             Annotation,
@@ -100,6 +104,7 @@ class TestPublicSurface:
             StreamSpec,
         )
         from halcytone_contracts.state import StateVector
+        from halcytone_contracts.summary import SessionSummary
 
         assert hc.SignalPacket is SignalPacket
         assert hc.StreamSpec is StreamSpec
@@ -110,3 +115,6 @@ class TestPublicSurface:
         assert hc.Annotation is Annotation
         assert hc.MapperConfigUpdate is MapperConfigUpdate
         assert hc.SessionManifest is SessionManifest
+        assert hc.Baseline is Baseline
+        assert hc.StreamBaseline is StreamBaseline
+        assert hc.SessionSummary is SessionSummary

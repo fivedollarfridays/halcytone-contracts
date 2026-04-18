@@ -1,4 +1,135 @@
 {
+  "$defs": {
+    "Baseline": {
+      "additionalProperties": false,
+      "description": "Per-session baseline: stream -> StreamBaseline, plus capture window.\n\n`streams` must contain at least one entry \u2014 a session that captured no\nbaselines is not representable in v0.2.0 (the manifest field is\nnon-optional by design; revisit if a use case emerges). Every dict key\nmust be a reserved name from `halcytone_contracts.signals.RESERVED_STREAMS`;\nunknown keys raise `ValidationError` with a sorted list of the\noffenders in the message.",
+      "properties": {
+        "captured_at": {
+          "format": "date-time",
+          "title": "Captured At",
+          "type": "string"
+        },
+        "duration_s": {
+          "minimum": 1,
+          "title": "Duration S",
+          "type": "integer"
+        },
+        "streams": {
+          "additionalProperties": {
+            "$ref": "#/$defs/StreamBaseline"
+          },
+          "title": "Streams",
+          "type": "object"
+        }
+      },
+      "required": [
+        "streams",
+        "duration_s",
+        "captured_at"
+      ],
+      "title": "Baseline",
+      "type": "object"
+    },
+    "SessionSummary": {
+      "additionalProperties": false,
+      "description": "End-of-session aggregate statistics written into `manifest.summary`.",
+      "properties": {
+        "mean_breath_depth": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mean Breath Depth",
+          "type": "number"
+        },
+        "mean_breath_rate": {
+          "title": "Mean Breath Rate",
+          "type": "number"
+        },
+        "mean_eeg_alpha": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mean Eeg Alpha",
+          "type": "number"
+        },
+        "mean_eeg_theta": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mean Eeg Theta",
+          "type": "number"
+        },
+        "mean_hr": {
+          "title": "Mean Hr",
+          "type": "number"
+        },
+        "mean_hrv_rmssd": {
+          "title": "Mean Hrv Rmssd",
+          "type": "number"
+        },
+        "mean_overall_presence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Mean Overall Presence",
+          "type": "number"
+        },
+        "peak_heart_breath_coherence": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Peak Heart Breath Coherence",
+          "type": "number"
+        },
+        "summary_schema_version": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Summary Schema Version",
+          "type": "integer"
+        },
+        "total_annotations": {
+          "minimum": 0,
+          "title": "Total Annotations",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mean_hr",
+        "mean_hrv_rmssd",
+        "mean_breath_rate",
+        "mean_breath_depth",
+        "mean_eeg_alpha",
+        "mean_eeg_theta",
+        "mean_overall_presence",
+        "peak_heart_breath_coherence",
+        "total_annotations"
+      ],
+      "title": "SessionSummary",
+      "type": "object"
+    },
+    "StreamBaseline": {
+      "additionalProperties": false,
+      "description": "One stream's summary statistics over the quiet-capture window.",
+      "properties": {
+        "mean": {
+          "title": "Mean",
+          "type": "number"
+        },
+        "sample_count": {
+          "minimum": 1,
+          "title": "Sample Count",
+          "type": "integer"
+        },
+        "stddev": {
+          "minimum": 0.0,
+          "title": "Stddev",
+          "type": "number"
+        }
+      },
+      "required": [
+        "mean",
+        "stddev",
+        "sample_count"
+      ],
+      "title": "StreamBaseline",
+      "type": "object"
+    }
+  },
   "additionalProperties": false,
   "description": "Metadata for a completed-or-in-progress session bundle on disk.",
   "properties": {
@@ -10,11 +141,7 @@
       "type": "object"
     },
     "baselines": {
-      "additionalProperties": {
-        "type": "number"
-      },
-      "title": "Baselines",
-      "type": "object"
+      "$ref": "#/$defs/Baseline"
     },
     "duration_s": {
       "title": "Duration S",
@@ -50,11 +177,7 @@
       "type": "string"
     },
     "summary": {
-      "additionalProperties": {
-        "type": "number"
-      },
-      "title": "Summary",
-      "type": "object"
+      "$ref": "#/$defs/SessionSummary"
     }
   },
   "required": [

@@ -11,6 +11,7 @@ and must stay in lockstep with the version declared in ``pyproject.toml``
 
 from __future__ import annotations
 
+from halcytone_contracts.baseline import Baseline, StreamBaseline
 from halcytone_contracts.bundles.manifest import SessionManifest
 from halcytone_contracts.drift import (
     ContractError,
@@ -35,12 +36,14 @@ from halcytone_contracts.storage import (
     SCHEMA_VERSION,
     read_ddl,
 )
+from halcytone_contracts.summary import SessionSummary
 
-__contract_version__: str = "0.1.1"
+__contract_version__: str = "0.2.0"
 __version__: str = __contract_version__
 
 __all__ = [
     "Annotation",
+    "Baseline",
     "ContractError",
     "MapperConfigUpdate",
     "REQUIRED_SCHEMA_VERSION",
@@ -51,8 +54,10 @@ __all__ = [
     "SessionManifest",
     "SessionStart",
     "SessionStop",
+    "SessionSummary",
     "SignalPacket",
     "StateVector",
+    "StreamBaseline",
     "StreamSpec",
     "__contract_version__",
     "__version__",
