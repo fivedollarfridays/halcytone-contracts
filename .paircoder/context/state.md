@@ -27,7 +27,7 @@ Tighten `SessionManifest` from two untyped dicts (`baselines`, `summary`) into f
 | T2.1 | Baseline + StreamBaseline pydantic models | 4 | P0 | 0 | ✓ done | — |
 | T2.2 | SessionSummary pydantic model (versioned) | 4 | P0 | 0 | ✓ done | — |
 | T2.3 | SessionManifest rewire + regenerated schema | 5 | P0 | 1 | ✓ done | T2.1, T2.2 |
-| T2.4 | Top-level exports for Baseline + SessionSummary | 2 | P0 | 1 | pending | T2.1, T2.2 |
+| T2.4 | Top-level exports for Baseline + SessionSummary | 2 | P0 | 1 | ✓ done | T2.1, T2.2 |
 | T2.5 | Bump to v0.2.0 + CHANGELOG + ROADMAP | 2 | P0 | 2 | pending | T2.3, T2.4 |
 
 ### Dependency Graph
@@ -71,7 +71,12 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
-- **T2.3 done** (auto-updated by hook)
+### Session: 2026-04-18 — T2.4 Top-level exports for Baseline + SessionSummary (Driver)
+
+- TDD: added `Baseline`, `StreamBaseline`, `SessionSummary` to `tests/test_exports.py::REQUIRED_EXPORTS` (now 24 names) and expanded `test_models_identity_matches_submodules` with identity assertions for the three new classes. Confirmed RED via `AttributeError: module 'halcytone_contracts' has no attribute 'Baseline'`.
+- Implemented: `halcytone_contracts/__init__.py` imports `Baseline, StreamBaseline` from `halcytone_contracts.baseline` and `SessionSummary` from `halcytone_contracts.summary`; all three added to `__all__` in alphabetical slot. Submodule import order stays bottom-up (signals → baseline → summary → session → drift → bundles → state → storage) so no circular imports.
+- Verified: `pytest` **336 passed** (all, incl. the 10 in `test_exports.py`), `ruff check .` clean, `python -c "from halcytone_contracts import Baseline, StreamBaseline, SessionSummary"` succeeds. All 6 T2.4 ACs satisfied.
+- Unblocks T2.5 (v0.2.0 bump + CHANGELOG + ROADMAP).
 
 ### Session: 2026-04-18 — T2.3 SessionManifest rewire + regenerated schema (Driver)
 
