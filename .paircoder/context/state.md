@@ -71,6 +71,8 @@ No deprioritized items. All five backlog entries pulled into the active sprint.
 
 ## What Was Just Done
 
+- **T2.3 done** (auto-updated by hook)
+
 ### Session: 2026-04-18 — T2.3 SessionManifest rewire + regenerated schema (Driver)
 
 - TDD RED: updated `tests/test_manifest.py` to expect typed fields before changing the model — added `_example_baseline()` / `_example_summary()` helpers that build `Baseline` + `SessionSummary` shapes (multi-stream baseline with `hrv.rmssd` / `breath.rate` / `eda`; full summary including `summary_schema_version=1`), revised `test_manifest_accepts_complete_payload` to assert `.baselines.streams["hrv.rmssd"].mean`, added `test_manifest_baselines_is_typed_Baseline_model` + `test_manifest_summary_is_typed_SessionSummary_model` identity checks, breaking-change migration helpers `test_manifest_rejects_dict_shaped_baselines` / `..._summary`, cross-module `test_manifest_rejects_baseline_with_unknown_stream_key` (proves `Baseline`'s `RESERVED_STREAMS` validator fires through `SessionManifest`), and `test_manifest_yaml_roundtrip_with_populated_baseline_and_summary` covering the full v0.2.0 YAML shape. 11 failures as expected.
